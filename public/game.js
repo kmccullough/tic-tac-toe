@@ -11,9 +11,9 @@
       app.dom.one('#js-canvas')
     );
 
-    const server = new TicTacToeServer( io.connect('//') );
+    const net = new TicTacToeNetClient( io.connect('//') );
 
-    const game = new TicTacToe( renderer, server, titleService );
+    const game = new TicTacToe( renderer, net, titleService );
 
     app.canvas.animate(15, frame => game.animate(frame));
 

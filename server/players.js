@@ -17,7 +17,12 @@ class Players {
     } else if (Array.isArray(players)) {
       this.players = players.slice();
     }
+    this.length = this.players.length;
     this.emitter = new PlayersEmitter();
+  }
+
+  [Symbol.iterator]() {
+    return this.players[Symbol.iterator]();
   }
 
   on(event, handler) {
@@ -28,6 +33,7 @@ class Players {
     player = Player.wrap(player);
     if (!this.has(player)) {
       this.players.push(player);
+      this.length = this.players.length;
       this.emitter.emit('add', player, this);
     }
     return this;
@@ -38,6 +44,7 @@ class Players {
     const i = this.players.findIndex(p => p.id === player.id);
     if (i >= 0) {
       this.players.splice(i, 1);
+      this.length = this.players.length;
       this.emitter.emit('remove', player, this);
     }
     return this;
@@ -46,6 +53,11 @@ class Players {
   has(player) {
     player = Player.wrap(player);
     return this.players.some(p => p.id === player.id);
+  }
+
+  forEach(fn) {
+    this.players.forEach(fn);
+    return this;
   }
 
 }

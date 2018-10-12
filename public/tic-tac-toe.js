@@ -4,25 +4,26 @@
 
     constructor(
       renderer,
-      server,
+      net,
       title,
     ) {
       this.renderer = renderer;
-      this.server = server;
+      this.net = net;
       this.title = title;
 
-      this.server
+      this.net
         .on('player', player => {
+          console.log('Player name:', player.name);
           this.title.set(player.name);
-        });
-      this.server
-        .on('game-start', game => {
+        })
+        .on('game-start', match => {
+          console.log('Match started against ' + match.opponent.name);
           this.renderer.setState({
             isInLobby: false,
           });
-        });
-      this.server
-        .on('game-end', game => {
+        })
+        .on('game-end', match => {
+          console.log('Match ended against ' + match.opponent.name);
           this.renderer.setState({
             isInLobby: true,
           });

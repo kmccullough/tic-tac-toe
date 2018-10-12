@@ -1,6 +1,6 @@
 (function () { 'use strict';
 
-  class TicTacToeServer {
+  class TicTacToeNetClient {
 
     static excludePlayer(players, player) {
       players = players || [];
@@ -42,20 +42,20 @@
 
       this.player = player;
       [ this.allPlayers, this.players ]
-        = TicTacToeServer.normalizePlayers(players, player);
+        = TicTacToeNetClient.normalizePlayers(players, player);
       this.chat = chat || [];
 
       this.socket
         // Get our own player information
         .on('player', player => {
           this.player = player;
-          this.players = TicTacToeServer.excludePlayer(players, this.player);
+          this.players = TicTacToeNetClient.excludePlayer(players, this.player);
           this.emitter.emit('player', player);
         })
         // Get information on connected players
         .on('players', players => {
           this.allPlayers = players;
-          this.players = TicTacToeServer.excludePlayer(players, this.player);
+          this.players = TicTacToeNetClient.excludePlayer(players, this.player);
           this.emitter.emit('all-players', players);
           this.emitter.emit('players', this.players);
         })
@@ -76,11 +76,12 @@
     }
 
     on(event, fn) {
-      return this.emitter.on(event, fn);
+      this.emitter.on(event, fn);
+      return this;
     }
 
   }
 
-  window.TicTacToeServer = TicTacToeServer;
+  window.TicTacToeNetClient = TicTacToeNetClient;
 
 })();
