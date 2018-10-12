@@ -6,8 +6,17 @@ class PlayersEmitter extends EventEmitter { }
 
 class Players {
 
-  constructor() {
+  static wrap(playersLike) {
+    return playersLike instanceof Players ? playersLike : new Players(playersLike);
+  }
+
+  constructor(players) {
     this.players = [];
+    if (players instanceof Players) {
+      this.players = players.players.slice();
+    } else if (Array.isArray(players)) {
+      this.players = players.slice();
+    }
     this.emitter = new PlayersEmitter();
   }
 
@@ -17,7 +26,7 @@ class Players {
 
   add(player) {
     player = Player.wrap(player);
-    if (!this.players.some(p => p.id === player.id)) {
+    if (!this.has(player)) {
       this.players.push(player);
       this.emitter.emit('add', player, this);
     }
@@ -32,6 +41,11 @@ class Players {
       this.emitter.emit('remove', player, this);
     }
     return this;
+  }
+
+  has(player) {
+    player = Player.wrap(player);
+    return this.players.some(p => p.id === player.id);
   }
 
 }

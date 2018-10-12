@@ -1,5 +1,9 @@
 class Player {
 
+  static wrap(playerLike) {
+    return playerLike instanceof Player ? playerLike : new Player(playerLike);
+  }
+
   constructor(
     playerOrId
   ) {
@@ -9,10 +13,6 @@ class Player {
       this.id = playerOrId.id;
       this.name = playerOrId.name;
     }
-  }
-
-  static wrap(playerLike) {
-    return playerLike instanceof Player ? playerLike : new Player(playerLike);
   }
 
 }

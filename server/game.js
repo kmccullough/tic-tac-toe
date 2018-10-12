@@ -1,24 +1,10 @@
 const EventEmitter = require('events');
 
+const PlayerMatch = require('./match');
+const PlayerMatches = require('./matches');
 const Players = require('./players');
-const Player = require('./player');
 
 class GameQueueEmitter extends EventEmitter { }
-
-class PlayerMatch {
-
-  constructor(a, b, consumeFn) {
-    this[0] = a;
-    this[1] = b;
-    this.consumeFn = consumeFn;
-  }
-
-  consume() {
-    this.consumeFn && this.consumeFn();
-    return [ this[0], this[1] ];
-  }
-
-}
 
 class Game {
 
@@ -26,29 +12,56 @@ class Game {
     this.emitter = new GameQueueEmitter();
 
     this.players = new Players();
-    this.players.on('add', (player, players) => {
-      // if (players.length >= 2) {
-      //   const players = new PlayerMatch(
-      //     this.players[0],
-      //     this.players[1],
-      //     () => this.players.splice(0, 2)
-      //   );
-      //   this.emitter.emit('match', players);
-      // }
+    this.queue = new Players();
+    this.matches = new PlayerMatches();
+
+    this.queue.on('add', () => this.matchPlayers());
+
+    this.matches.on('remove', match => {
+      match.players.players.forEach(player => {
+        if (this.players.has(player) && !this.queue.has(player)) {
+          this.queue.add(player);
+        }
+      })
     });
+  }
+
+  matchPlayers() {
+    const players = this.queue.players.slice(0, 2);
+    if (players.length >= 2) {
+      const match = new PlayerMatch(players);
+      this.queue
+        .remove(players[0])
+        .remove(players[1])
+      ;
+      this.matches.add(match);
+      this.emitter.emit('match-start', match);
+    }
+    return this;
   }
 
   on(event, handler) {
     this.emitter.on(event, handler);
+    return this;
   }
 
   addPlayer(player) {
     this.players.add(player);
+    this.queue.add(player);
+    this.emitter.emit('add-player', player);
     return this;
   }
 
   removePlayer(player) {
     this.players.remove(player);
+    this.queue.remove(player);
+    this.matches.getByPlayer(player)
+      .forEach(match => {
+        this.matches.remove(match);
+        // TODO: reason for match-end (e.g. player quit, other player wins)
+        this.emitter.emit('match-end', match)
+      });
+    this.emitter.emit('remove-player', player);
     return this;
   }
 

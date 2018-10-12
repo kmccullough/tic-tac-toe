@@ -4,7 +4,8 @@
 
     constructor(
       canvas,
-      style
+      style,
+      state
     ) {
       this.canvas = canvas;
       this.canvasContext = canvas.getContext('2d');
@@ -15,19 +16,52 @@
         colorGrid: 'gray',
         xColor: 'darkblue',
         oColor: 'darkgreen',
-        markerWidth: 1 / 25,
         scoreFontSize: 1 / 10,
         scoreFont: 'sans-serif',
-        // xWidth: 1 / 25,
-        // oWidth: 1 / 25,
+        markerWidth: 1 / 20,
+        // xWidth: 1 / 20,
+        // oWidth: 1 / 20,
         ...style,
       };
+      this.state = {
+        isInLobby: true,
+        ...state,
+      };
+    }
+
+    setState(state) {
+      this.state = {
+        ...this.state,
+        ...state,
+      };
+      return this;
     }
 
     animate(frame) {
       const can = this.canvas;
       can.width = window.innerWidth;
       can.height = window.innerHeight;
+      if (this.state.isInLobby) {
+        this.renderLobby();
+      } else {
+        this.renderBoard();
+      }
+    }
+
+    renderLobby() {
+      const can = this.canvas;
+      const ctx = this.canvasContext;
+
+      const minSize = Math.min(can.width, can.height);
+
+      const fontSize = minSize * this.style.scoreFontSize;
+      ctx.font = fontSize + 'px ' + this.style.scoreFont;
+      ctx.fillStyle = 'black';
+      ctx.fillText('Lobby', fontSize / 5, fontSize);
+    }
+
+    renderBoard() {
+      const can = this.canvas;
       const ctx = this.canvasContext;
 
       const gridWidth = this.style.gridWidth;
@@ -41,7 +75,7 @@
       const fontSize = minSize * this.style.scoreFontSize;
       ctx.font = fontSize + 'px ' + this.style.scoreFont;
       ctx.fillStyle = 'black';
-      ctx.fillText('Work In Progress', fontSize / 5, fontSize);
+      ctx.fillText('Versus', fontSize / 5, fontSize);
 
       ctx.lineWidth = lineWidth;
       ctx.lineCap = 'round';
@@ -113,7 +147,6 @@
       }
 
       ctx.stroke();
-
     }
 
   }
