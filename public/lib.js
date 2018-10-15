@@ -221,6 +221,12 @@
      */
     cb: {
       Emitter: Emitter,
+    },
+    math: {
+      is2DContained: (rect, pos) =>
+        rect && pos
+        && pos.x > rect.left && pos.x < rect.right
+        && pos.y > rect.top  && pos.y < rect.bottom
     }
   };
 

@@ -10,42 +10,31 @@ class TicTacToe {
     players,
     queue,
   ) {
+    /** @type TicTacToeNetClient */
     this.net = net;
     this.names = names;
     this.players = players || new Players();
     this.queue = queue || new Players();
     this.matches = new PlayerMatches();
 
-    this.net
-      .on('connection', player => {
-        player.name = this.names.add();
-        console.log(`Player connected: ${player.name} (${this.players.length + 1})`);
-        this.players.add(player);
-        this.net
-          .emitPlayer(player)
-          .broadcastPlayers([ ...this.players ])
-        ;
-      })
-      .on('disconnect', player => {
-        console.log(`Player disconnected: ${player.name} (${this.players.length - 1})`);
-        this.players.remove(player);
-        this.names.remove(player.name);
-        this.matches.getByPlayer(player)
-          .forEach(match => this.matches.remove(match));
-        this.net.broadcastPlayers(Array.from(this.players));
-      })
-    ;
+    this.players.on('add', player => {
+      // Notify players of latest player list
+      this.net.broadcastPlayers([ ...this.players ]);
+      // Add player to match queue
+      this.queue.add(player);
+    });
 
-    this.players.on('add', player => this.queue.add(player));
-
-    // Try to match players whenever a new player added to the queue
-    this.queue.on('add', () => this.matchPlayers());
+    this.queue.on('add', () => {
+      // Try to match players whenever a new player added to the queue
+      this.matchPlayers();
+    });
 
     this.matches
       .on('add', match => {
         const players = [ ...match.players ];
         console.log(`Match started between ${players[0].name} and ${players[1].name}`);
-        this.net.matchStart(match);
+        // Notify players of their starting match
+        this.net.broadcastMatchStart(match);
       })
       .on('remove', match => {
         const players = [ ...match.players ];
@@ -57,7 +46,40 @@ class TicTacToe {
           }
         });
         // Notify players match is over
-        this.net.matchEnd(match);
+        this.net.broadcastMatchEnd(match);
+      })
+    ;
+
+    this.net
+      .on('connection', player => {
+        player.name = this.names.add();
+        console.log(`Player connected: ${player.name} (${this.players.length + 1})`);
+        // Tell the player who they are
+        this.net.emitPlayer(player);
+        // Add the player to the collection
+        this.players.add(player);
+      })
+      .on('take-turn', (player, pos) => {
+        const match = this.matches.getByPlayer(player)[0];
+        if (!match) {
+          this.net.error('take-turn', 'You are not in a match.');
+        } else if (!match.isPlayerTurn(player)) {
+          this.net.error('take-turn', 'It is not your turn.');
+        } else if (!match.board.isEmptyAt(pos)) {
+          this.net.error('take-turn', 'That position is not empty.')
+        } else {
+          match.board.setMarker(pos, match.getMarker());
+          match.toggleMarker();
+          this.net.broadcastMatchState(match);
+        }
+      })
+      .on('disconnect', player => {
+        console.log(`Player disconnected: ${player.name} (${this.players.length - 1})`);
+        this.players.remove(player);
+        this.names.remove(player.name);
+        this.matches.getByPlayer(player)
+          .forEach(match => this.matches.remove(match));
+        this.net.broadcastPlayers(Array.from(this.players));
       })
     ;
   }

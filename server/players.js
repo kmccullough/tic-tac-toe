@@ -60,6 +60,9 @@ class Players {
     return this;
   }
 
+  indexOf(player) {
+    return this.players.indexOf(player);
+  }
 }
 
 module.exports = Players;

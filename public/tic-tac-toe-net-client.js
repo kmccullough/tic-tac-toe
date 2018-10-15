@@ -68,6 +68,10 @@
         .on('game-start', game => {
           this.emitter.emit('game-start', game);
         })
+        // Update of game state
+        .on('game-state', game => {
+          this.emitter.emit('game-state', game);
+        })
         // Game over
         .on('game-end', game => {
           this.emitter.emit('game-end', game);
@@ -78,6 +82,10 @@
     on(event, fn) {
       this.emitter.on(event, fn);
       return this;
+    }
+
+    takeTurn(pos) {
+      this.socket.emit('take-turn', pos)
     }
 
   }

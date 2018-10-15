@@ -3,29 +3,55 @@
   class TicTacToe {
 
     constructor(
+      input,
       renderer,
       net,
       title,
     ) {
+      this.input = input;
       this.renderer = renderer;
       this.net = net;
       this.title = title;
 
+      this.input
+        .on('click', pos => {
+          this.renderer.setState({ click: pos });
+        })
+      ;
+
+      this.renderer.on('take-turn', pos => {
+        this.net.takeTurn(pos);
+      });
+
+      const gameState = state => {
+        this.renderer.setState({
+          isMyTurn: state.turn === state.marker,
+          board: state.board,
+        });
+      };
+
       this.net
         .on('player', player => {
-          console.log('Player name:', player.name);
           this.title.set(player.name);
         })
-        .on('game-start', match => {
-          console.log('Match started against ' + match.opponent.name);
+        .on('game-start', state => {
+          console.log('Match started against ' + state.opponent.name);
+          console.log('My marker is ' + state.marker + ' and it is' + (state.turn === state.marker ? '' : ' not') + ' my turn.');
           this.renderer.setState({
             isInLobby: false,
+            myMarker: state.marker,
           });
+          gameState(state);
         })
-        .on('game-end', match => {
-          console.log('Match ended against ' + match.opponent.name);
+        .on('game-state', state => {
+          console.log('Game state:', state);
+          gameState(state);
+        })
+        .on('game-end', state => {
+          console.log('Match ended against ' + state.opponent.name);
           this.renderer.setState({
-            isInLobby: true,
+            board: state.board,
+            isInLobby: true
           });
         })
       ;
@@ -33,6 +59,7 @@
 
     animate(frame) {
       this.renderer.animate(frame);
+      this.renderer.setState({ click: null });
     }
 
   }
