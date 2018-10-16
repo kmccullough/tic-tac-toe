@@ -5,12 +5,15 @@ const PlayerMatches = require('./matches');
 class TicTacToe {
 
   constructor(
+    analyzer,
     net,
     names,
     players,
     queue,
   ) {
-    /** @type TicTacToeNetClient */
+    /** @type TicTacToeAnalyzer */
+    this.analyzer = analyzer;
+    /** @type TicTacToeNetServer */
     this.net = net;
     this.names = names;
     this.players = players || new Players();
@@ -39,14 +42,14 @@ class TicTacToe {
       .on('remove', match => {
         const players = [ ...match.players ];
         console.log(`Match ended between ${players[0].name} and ${players[1].name}`);
+        // Notify players match is over
+        this.net.broadcastMatchEnd(match);
         // If a match is removed, add players back to queue
         players.forEach(player => {
           if (this.players.has(player) && !this.queue.has(player)) {
             this.queue.add(player);
           }
         });
-        // Notify players match is over
-        this.net.broadcastMatchEnd(match);
       })
     ;
 
@@ -60,6 +63,7 @@ class TicTacToe {
         this.players.add(player);
       })
       .on('take-turn', (player, pos) => {
+        /** @type PlayerMatch */
         const match = this.matches.getByPlayer(player)[0];
         if (!match) {
           this.net.error('take-turn', 'You are not in a match.');
@@ -68,9 +72,24 @@ class TicTacToe {
         } else if (!match.board.isEmptyAt(pos)) {
           this.net.error('take-turn', 'That position is not empty.')
         } else {
+          // Make the move
           match.board.setMarker(pos, match.getMarker());
+          // Change turn marker
           match.toggleMarker();
-          this.net.broadcastMatchState(match);
+          // Analyze the resulting board
+          const analysis = this.analyzer.analyze(match.board);
+          if (analysis.isInvalid) {
+            console.log('Invalid game state');
+            // Something went wrong
+            match.setResult({ error: 'Invalid game state' });
+            this.matches.remove(match);
+          } else if (analysis.isOver) {
+            match.setResult({ winner: analysis.winningMarker });
+            this.matches.remove(match);
+          } else {
+            // Still playing, broadcast state
+            this.net.broadcastMatchState(match);
+          }
         }
       })
       .on('disconnect', player => {

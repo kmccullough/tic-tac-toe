@@ -33,6 +33,10 @@ class PlayerMatch {
     this.turnMarker = this.turnMarker === 'o' ? 'x' : 'o'
   }
 
+  setResult(result) {
+    this.result = result;
+  }
+
 }
 
 module.exports = PlayerMatch;

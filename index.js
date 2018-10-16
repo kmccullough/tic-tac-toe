@@ -6,9 +6,10 @@ const io = require('socket.io')(server);
 
 const path = require('path');
 
+const TicTacToeAnalyzer = require('./server/tic-tac-toe-analyzer');
+const TicTacToeNetServer = require('./server/tic-tac-toe-net-server');
 const Names = require('./server/names');
 const TicTacToe = require('./server/tic-tac-toe');
-const TicTacToeNetServer = require('./server/tic-tac-toe-net-server');
 
 const port = 3000;
 
@@ -21,8 +22,7 @@ app.get('/', function(req, res) {
   res.sendFile(path.join(__dirname + '/index.html'));
 });
 
-const names = new Names();
-
+const analyzer = new TicTacToeAnalyzer();
 const net = new TicTacToeNetServer( io );
-
-const game = new TicTacToe( net, names );
+const names = new Names();
+const game = new TicTacToe( analyzer, net, names );

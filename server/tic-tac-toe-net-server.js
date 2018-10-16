@@ -84,14 +84,14 @@ class TicTacToeNetServer {
     const players = match.players.players;
     const c1 = this.clients.get(players[0].id);
     c1 && c1
-      .emit('game-start', {
+      .emit('game-state', {
         ...game,
         marker: 'x',
         opponent: players[1],
       });
     const c2 = this.clients.get(players[1].id);
     c2 && c2
-      .emit('game-start', {
+      .emit('game-state', {
         ...game,
         marker: 'o',
         opponent: players[0],
@@ -105,11 +105,13 @@ class TicTacToeNetServer {
     c1 && c1
       .emit('game-end', {
         opponent: players[1],
+        result: match.result,
       });
     const c2 = this.clients.get(players[1].id);
     c2 && c2
       .emit('game-end', {
         opponent: players[0],
+        result: match.result,
       });
     return this;
   }
