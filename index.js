@@ -15,11 +15,11 @@ const port = 3000;
 
 server.listen(port, () => console.log(`Listening on port ${port}.`));
 
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Redirect for index
 app.get('/', function(req, res) {
-  res.sendFile(path.join(__dirname + '/index.html'));
+  res.sendFile(path.join(__dirname + '/public/index.html'));
 });
 
 const analyzer = new TicTacToeAnalyzer();
