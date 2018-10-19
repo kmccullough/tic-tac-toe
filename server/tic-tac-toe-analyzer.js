@@ -1,8 +1,6 @@
-class TicTacToeAnalyzer {
+const { TicTacToeBoard } = require('./tic-tac-toe-board');
 
-  constructor(
-  ) {
-  }
+class TicTacToeAnalyzer {
 
   /**
    * @param {TicTacToeBoard} board
@@ -33,6 +31,9 @@ class TicTacToeAnalyzer {
         console.log('Not possible to have two winners');
       }
     };
+    if (!(board instanceof TicTacToeBoard)) {
+      throw Error('Expected TicTacToeBoard');
+    }
     board.board.forEach((row, y) => {
       row.forEach((marker, x) => {
         if (!marker) {
@@ -91,25 +92,28 @@ class TicTacToeAnalyzer {
             2 - x === y
           ];
           if (isDiagonal[0] || isDiagonal[1]) {
-            const diagonal = isDiagonal[1] ? 1 : 0;
             const diagonalVectors = winVectors.diagonals;
-            const diagonalVector = diagonalVectors[diagonal];
-            if (!diagonalVector) {
-              // Row win not possible
-            } else if (!diagonalVector.marker) {
-              // First marker in row
-              diagonalVector.marker = marker;
-              diagonalVector.count = 1;
-            } else if (diagonalVector.marker === marker) {
-              // Same marker in row
-              if (++diagonalVector.count >= 3) {
-                diagonalVectors[diagonal] = true;
-                win(marker);
+            diagonalVectors.forEach((diagonalVector, diagonal) => {
+              if (!isDiagonal[diagonal] || !diagonalVector
+                || diagonalVector === true
+              ) {
+                return;
               }
-            } else {
-              // Opposing marker in row
-              diagonalVectors[diagonal] = false;
-            }
+              if (!diagonalVector.marker) {
+                // First marker in diagonal
+                diagonalVector.marker = marker;
+                diagonalVector.count = 1;
+              } else if (diagonalVector.marker === marker) {
+                // Same marker in diagonal
+                if (++diagonalVector.count >= 3) {
+                  diagonalVectors[diagonal] = true;
+                  win(marker);
+                }
+              } else {
+                // Opposing marker in diagonal
+                diagonalVectors[diagonal] = false;
+              }
+            });
           }
         }
       });
@@ -138,4 +142,6 @@ class TicTacToeAnalyzer {
 
 }
 
-module.exports = TicTacToeAnalyzer;
+module.exports = {
+  TicTacToeAnalyzer,
+};

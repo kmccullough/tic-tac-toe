@@ -118,4 +118,6 @@ class TicTacToeNetServer {
 
 }
 
-module.exports = TicTacToeNetServer;
+module.exports = {
+  TicTacToeNetServer,
+};

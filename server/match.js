@@ -1,5 +1,5 @@
-const Players = require('./players');
-const TicTacToeBoard = require('./tic-tac-toe-board');
+const { Players } = require('./players');
+const { TicTacToeBoard } = require('./tic-tac-toe-board');
 
 class PlayerMatch {
 
@@ -39,4 +39,6 @@ class PlayerMatch {
 
 }
 
-module.exports = PlayerMatch;
+module.exports = {
+  PlayerMatch,
+};

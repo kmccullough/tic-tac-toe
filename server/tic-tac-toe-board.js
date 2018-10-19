@@ -15,4 +15,6 @@ class TicTacToeBoard {
   }
 }
 
-module.exports = TicTacToeBoard;
+module.exports = {
+  TicTacToeBoard,
+};

@@ -1,6 +1,6 @@
-const Players = require('./players');
-const PlayerMatch = require('./match');
-const PlayerMatches = require('./matches');
+const { Players } = require('./players');
+const { PlayerMatch } = require('./match');
+const { PlayerMatches } = require('./matches');
 
 class TicTacToe {
 
@@ -118,4 +118,6 @@ class TicTacToe {
 
 }
 
-module.exports = TicTacToe;
+module.exports = {
+  TicTacToe,
+};

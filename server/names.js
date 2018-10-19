@@ -245,4 +245,6 @@ class Names {
 
 }
 
-module.exports = Names;
+module.exports = {
+  Names,
+};

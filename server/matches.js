@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
 
-const Player = require('./player');
+const { Player } = require('./player');
 
 class MatchesEmitter extends EventEmitter { }
 
@@ -54,4 +54,6 @@ class PlayerMatches {
   }
 }
 
-module.exports = PlayerMatches;
+module.exports = {
+  PlayerMatches,
+};

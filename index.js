@@ -6,10 +6,10 @@ const io = require('socket.io')(server);
 
 const path = require('path');
 
-const TicTacToeAnalyzer = require('./server/tic-tac-toe-analyzer');
-const TicTacToeNetServer = require('./server/tic-tac-toe-net-server');
-const Names = require('./server/names');
-const TicTacToe = require('./server/tic-tac-toe');
+const { TicTacToeAnalyzer } = require('./server/tic-tac-toe-analyzer');
+const { TicTacToeNetServer } = require('./server/tic-tac-toe-net-server');
+const { Names } = require('./server/names');
+const { TicTacToe } = require('./server/tic-tac-toe');
 
 const port = 3000;
 
