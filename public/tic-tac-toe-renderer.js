@@ -86,7 +86,7 @@
         left: 0,
         top: 0,
         right: can.width,
-        bottom: scoreFontSize
+        bottom: scoreFontSize * 1.2
       };
       this.drawScoreboard(ctx, scoreboardRect, this.maths, this.style);
 
@@ -100,14 +100,42 @@
     }
 
     drawScoreboard(ctx, rect, maths, style) {
+      const cx = (rect.right - rect.left) / 2;
       const fontSize = maths.scoreFontSize;
       ctx.font = fontSize + 'px ' + style.scoreFont;
       ctx.fillStyle = 'black';
-      ctx.fillText(
-        'Versus',
-        rect.left + fontSize / 5, // Plus some padding
-        rect.top  + fontSize // Baseline
-      );
+      const baseLine = rect.top + fontSize;
+      const dlmtWho = '';
+      // const me = '(Me)';
+      const me = '*';
+      // const them = '(' + (this.isHumanOpponent ? 'Them' : 'CPU') + ')';
+      const them = '';
+
+      // const dlmtExplicit = ' : ';
+      const dlmtExplicit = '';
+      // const xExplicit = 'X';
+      const xExplicit = '';
+      // const oExplicit = 'O';
+      const oExplicit = '';
+
+      const padding = '  ';
+
+      const xWho = this.state.myMarker === 'x' ? me : them;
+      const oWho = this.state.myMarker === 'o' ? me : them;
+      const xPlayer = this.state.x;
+      const oPlayer = this.state.o;
+
+      const turnMarker = this.state.turn === 'x' ? '<' : '>';
+
+      const xText = xPlayer + dlmtWho + xWho + dlmtExplicit + xExplicit + padding;
+      const oText = padding + oExplicit + dlmtExplicit + oPlayer + dlmtWho + oWho;
+
+      ctx.textAlign = 'center';
+      ctx.fillText(turnMarker, cx, baseLine);
+      ctx.textAlign = 'right';
+      ctx.fillText(xText, cx, baseLine);
+      ctx.textAlign = 'left';
+      ctx.fillText(oText, cx, baseLine);
     }
 
     drawBoard(ctx, rect, style) {
@@ -131,11 +159,6 @@
         row.forEach((marker, x) => {
           marker = (marker || '').toLowerCase();
           let p = minSize * (style.xWidth || style.markerWidth);
-          ctx.lineWidth = p;
-
-          ctx.strokeStyle = style.xColor;
-          ctx.beginPath();
-
           const x1 = rect.left + lane.width * x + p;
           const x2 = x1 + lane.width - p - p;
           const y1 = rect.top + lane.height * y + p;

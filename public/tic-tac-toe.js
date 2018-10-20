@@ -7,11 +7,13 @@
       renderer,
       net,
       title,
+      player,
     ) {
       this.input = input;
       this.renderer = renderer;
       this.net = net;
       this.title = title;
+      this.player = player || {};
 
       this.input
         .on('click', pos => {
@@ -26,12 +28,14 @@
       const gameState = state => {
         this.renderer.setState({
           isMyTurn: state.turn === state.marker,
+          turn: state.turn,
           board: state.board,
         });
       };
 
       this.net
         .on('player', player => {
+          this.player = player;
           this.title.set(player.name);
         })
         .on('game-start', state => {
@@ -40,6 +44,9 @@
           this.renderer.setState({
             isInLobby: false,
             myMarker: state.marker,
+            isHumanOpponent: true,
+            [state.marker]: this.player.name,
+            [state.marker === 'x' ? 'o' : 'x']: state.opponent.name,
           });
           gameState(state);
         })
