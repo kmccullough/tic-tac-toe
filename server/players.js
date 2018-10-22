@@ -27,6 +27,7 @@ class Players {
 
   on(event, handler) {
     this.emitter.on(event, handler);
+    return this;
   }
 
   add(player) {

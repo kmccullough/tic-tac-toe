@@ -20,12 +20,21 @@ class TicTacToe {
     this.queue = queue || new Players();
     this.matches = new PlayerMatches();
 
-    this.players.on('add', player => {
-      // Notify players of latest player list
-      this.net.broadcastPlayers([ ...this.players ]);
-      // Add player to match queue
-      this.queue.add(player);
-    });
+    this.players
+      .on('add', player => {
+        // Notify players of latest player list
+        this.net.broadcastPlayers([ ...this.players ]);
+        // Add player to match queue
+        this.queue.add(player);
+      })
+      .on('remove', player => {
+        this.names.remove(player.name);
+        this.queue.remove(player);
+        this.matches.getByPlayer(player)
+          .forEach(match => this.matches.remove(match));
+        this.net.broadcastPlayers(Array.from(this.players));
+      })
+    ;
 
     this.queue.on('add', () => {
       // Try to match players whenever a new player added to the queue
@@ -44,9 +53,10 @@ class TicTacToe {
         console.log(`Match ended between ${players[0].name} and ${players[1].name}`);
         // Notify players match is over
         this.net.broadcastMatchEnd(match);
-        // If a match is removed, add players back to queue
+        // If a match is removed, add valid players back to queue
         players.forEach(player => {
           if (this.players.has(player) && !this.queue.has(player)) {
+            console.log(`Player ${player.name} added back to match queue.`);
             this.queue.add(player);
           }
         });
@@ -95,10 +105,6 @@ class TicTacToe {
       .on('disconnect', player => {
         console.log(`Player disconnected: ${player.name} (${this.players.length - 1})`);
         this.players.remove(player);
-        this.names.remove(player.name);
-        this.matches.getByPlayer(player)
-          .forEach(match => this.matches.remove(match));
-        this.net.broadcastPlayers(Array.from(this.players));
       })
     ;
   }
