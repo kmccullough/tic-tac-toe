@@ -88,6 +88,10 @@
       this.socket.emit('take-turn', pos)
     }
 
+    queueToPlay() {
+      this.socket.emit('queue');
+    }
+
   }
 
   window.TicTacToeNetClient = TicTacToeNetClient;

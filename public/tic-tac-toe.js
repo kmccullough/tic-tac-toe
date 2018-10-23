@@ -11,6 +11,7 @@
     ) {
       this.input = input;
       this.renderer = renderer;
+      /** @type TicTacToeNetClient */
       this.net = net;
       this.title = title;
       this.player = player || {};
@@ -37,6 +38,7 @@
         .on('player', player => {
           this.player = player;
           this.title.set(player.name);
+          this.net.queueToPlay();
         })
         .on('game-start', state => {
           console.log('Match started against ' + state.opponent.name);
@@ -58,8 +60,16 @@
           console.log('Match ended against ' + state.opponent.name);
           this.renderer.setState({
             board: state.board,
-            isInLobby: true
+            result: state.result,
           });
+          setTimeout(() => {
+            this.renderer.setState({
+              board: null,
+              result: null,
+              isInLobby: true,
+            });
+            this.net.queueToPlay();
+          }, 5000);
         })
       ;
     }

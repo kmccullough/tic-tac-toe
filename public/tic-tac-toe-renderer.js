@@ -19,6 +19,8 @@
         oColor: 'darkgreen',
         scoreFontSize: 1 / 10,
         scoreFont: 'sans-serif',
+        winFontSize: 1 / 5,
+        winFont: 'sans-serif',
         markerWidth: 1 / 20,
         // xWidth: 1 / 20,
         // oWidth: 1 / 20,
@@ -76,6 +78,8 @@
       // Clear canvas
       ctx.clearRect(0, 0, can.width, can.height);
 
+      const cy = can.height / 2;
+
       const minSize
         = this.maths.minSize
         = Math.min(can.width, can.height);
@@ -97,6 +101,20 @@
         bottom: can.height
       };
       this.drawBoard(ctx, gridRect, this.style);
+
+      if (this.state.result) {
+        const winFontSize
+          = this.maths.winFontSize
+          = minSize * this.style.winFontSize;
+        const winTop = cy - winFontSize / 2;
+        const winnerRect = {
+          left: 0,
+          top: winTop,
+          right: can.width,
+          bottom: winTop + winFontSize
+        };
+        this.drawWinner(ctx, winnerRect, this.maths, this.style);
+      }
     }
 
     drawScoreboard(ctx, rect, maths, style) {
@@ -241,6 +259,21 @@
         curve(marker.right, marker.top,    marker.right, yc);
       });
       ctx.stroke();
+    }
+
+    drawWinner(ctx, rect, maths, style) {
+      const cx = (rect.right - rect.left) / 2;
+      const fontSize = maths.winFontSize;
+      ctx.font = fontSize + 'px ' + style.winFont;
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = maths.winFontSize / 20;
+      ctx.fillStyle = 'white';
+      const baseLine = rect.top + fontSize;
+      ctx.textAlign = 'center';
+      const winMessage = this.state.result.winner
+        .toUpperCase() + ' Wins!';
+      ctx.strokeText(winMessage, cx, baseLine);
+      ctx.fillText(winMessage, cx, baseLine);
     }
 
   }
