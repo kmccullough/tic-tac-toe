@@ -36,12 +36,12 @@ class TicTacToe {
 
     this.queue
       .on('add', player => {
-        console.log(`Player queueing: ${player.name} (${this.queue.length + 1})`);
+        console.log(`Player queueing: ${player.name} (${this.queue.length})`);
         // Try to match players whenever a new player added to the queue
         this.matchPlayers();
       })
       .on('remove', player => {
-        console.log(`Player dequeueing: ${player.name} (${this.queue.length + 1})`);
+        console.log(`Player dequeueing: ${player.name} (${this.queue.length})`);
       })
     ;
 
