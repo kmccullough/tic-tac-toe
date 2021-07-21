@@ -1,3 +1,13 @@
+const process = require('process');
+
+function onExit() {
+  // do whatever to terminate properly
+  // at worst, just 'exit(0)'
+  process.exit(0);
+}
+
+process.on('SIGTERM', onExit);
+process.on('SIGINT', onExit);
 
 const express = require('express');
 const app = express();
