@@ -31,6 +31,7 @@ ipc.serve(() => {
   ipcServer.on('update', (data, socket) => {
     // For now, just end after a short timeout
     setTimeout(() => {
+      io.emit('maintenance', 5000);
       ipcServer.emit(socket, 'update');
     }, 5000);
   });

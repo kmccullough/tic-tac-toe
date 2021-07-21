@@ -35,6 +35,18 @@
       };
 
       this.net
+        .on('maintenance', time => {
+          const endTime = performance.now() + time;
+          const warn = () => {
+            const remaining = performance.now() - endTime;
+            if (remaining < 0) {
+              return clearInterval(interval);
+            }
+            console.log(`Server shutting down for maintenance in ${Math.floor(remaining / 1000)} minutes.`);
+          }
+          warn();
+          const interval = setInterval(warn, 1000);
+        })
         .on('player', player => {
           this.player = player;
           this.title.set(player.name);
