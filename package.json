@@ -21,6 +21,7 @@
     "karma-chrome-launcher": "^2.2.0",
     "karma-jasmine": "^1.1.2",
     "karma-min-reporter": "^0.1.0",
-    "karma-notify-reporter": "^1.0.1"
+    "karma-notify-reporter": "^1.0.1",
+    "node-ipc": "^10.0.2"
   }
 }

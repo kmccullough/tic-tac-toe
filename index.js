@@ -11,6 +11,22 @@ const { TicTacToeNetServer } = require('./server/tic-tac-toe-net-server');
 const { Names } = require('./server/names');
 const { TicTacToe } = require('./server/tic-tac-toe');
 
+const ipc = require('node-ipc');
+
+ipc.config.id = 'tic-tac-toe-LpptAjZ3/fdXmTN7KTt8lg==';
+ipc.config.stopRetrying = 0;
+
+const ipcServer = ipc.server;
+ipc.serve(() => {
+  ipcServer.on('update', (data, socket) => {
+    // For now, just end after a short timeout
+    setTimeout(() => {
+      ipcServer.emit(socket, 'update');
+    }, 5000);
+  });
+});
+ipcServer.start();
+
 const port = 3000;
 
 server.listen(port, () => console.log(`Listening on port ${port}.`));
