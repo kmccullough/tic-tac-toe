@@ -3,6 +3,7 @@ const process = require('process');
 function onExit() {
   // do whatever to terminate properly
   // at worst, just 'exit(0)'
+  console.log('Tic-Tac-Terminating...');
   process.exit(0);
 }
 
@@ -26,17 +27,16 @@ const ipc = require('node-ipc');
 ipc.config.id = 'tic-tac-toe-LpptAjZ3/fdXmTN7KTt8lg==';
 ipc.config.stopRetrying = 0;
 
-const ipcServer = ipc.server;
 ipc.serve(() => {
-  ipcServer.on('update', (data, socket) => {
+  ipc.server.on('update', (data, socket) => {
     // For now, just end after a short timeout
     setTimeout(() => {
       io.emit('maintenance', 5000);
-      ipcServer.emit(socket, 'update');
+      ipc.server.emit(socket, 'update');
     }, 5000);
   });
 });
-ipcServer.start();
+ipc.server.start();
 
 const port = 3000;
 
