@@ -24,7 +24,7 @@ const { TicTacToe } = require('./server/tic-tac-toe');
 
 const ipc = require('node-ipc');
 
-ipc.config.id = 'tic-tac-toe-LpptAjZ3/fdXmTN7KTt8lg==';
+ipc.config.id = 'tic-tac-toe.U0F0IWJhfExBckgS';
 ipc.config.stopRetrying = 0;
 
 ipc.serve(() => {
