@@ -227,7 +227,15 @@
         rect && pos
         && pos.x > rect.left && pos.x < rect.right
         && pos.y > rect.top  && pos.y < rect.bottom
-    }
+    },
+    compare: {
+      isChanged(previousValues, values) {
+        if (!previousValues || previousValues.some((p, i) => p !== values[i])) {
+          return values;
+        }
+        return false;
+      },
+    },
   };
 
   const app = window.app = new App();

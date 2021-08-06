@@ -88,7 +88,6 @@
 
     animate(frame) {
       this.renderer.animate(frame);
-      this.renderer.setState({ click: null });
     }
 
   }

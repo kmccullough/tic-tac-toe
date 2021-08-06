@@ -50,21 +50,67 @@
     animate(frame) {
       const can = this.canvas;
       const ctx = this.canvasContext;
-      can.width = window.innerWidth;
-      can.height = window.innerHeight;
+      const { width, height } = can;
+      const { innerWidth, innerHeight } = window;
+      const isWidthChange = width !== innerWidth;
+      const isHeightChange = height !== innerHeight;
+
+      // Set clear flag if size changed
+      if (isWidthChange || isHeightChange) {
+        if (isWidthChange) {
+          can.width = innerWidth;
+        }
+        if (isHeightChange) {
+          can.height = innerHeight;
+        }
+        this.isCleared = true;
+      }
+
+      // Set clear flag on mouse click
+      if (this.state.click) {
+        this.isCleared = true;
+      }
+
+      // Set clear flag if state changed
+      if (!this.isCleared) {
+        const drawDepVars = app.compare.isChanged(this.drawDepVars, [
+          this.state.isInLobby,
+        ]);
+        if (drawDepVars) {
+          this.isCleared = true;
+          this.drawDepVars = drawDepVars;
+        }
+      }
+
       ctx.lineCap = 'round';
       if (this.state.isInLobby) {
         this.renderLobby();
       } else {
         this.renderBoard();
       }
+
+      this.isCleared = false;
+      this.state.click = null;
     }
 
     renderLobby() {
       const can = this.canvas;
       const ctx = this.canvasContext;
+      const { width, height } = can;
 
-      const minSize = Math.min(can.width, can.height);
+      if (!this.isCleared) {
+        const lobbyDepVars = app.compare.isChanged(this.lobbyDepVars, [
+          // e.g. player count
+        ]);
+        if (!lobbyDepVars) {
+          return;
+        }
+        this.lobbyDepVars = lobbyDepVars;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+
+      const minSize = Math.min(width, height);
 
       const fontSize = minSize * this.style.scoreFontSize;
       ctx.font = fontSize + 'px ' + this.style.scoreFont;
@@ -75,8 +121,19 @@
     renderBoard() {
       const can = this.canvas;
       const ctx = this.canvasContext;
-      // Clear canvas
-      ctx.clearRect(0, 0, can.width, can.height);
+
+      if (!this.isCleared) {
+        const gameDepVars = app.compare.isChanged(this.gameDepVars, [
+          this.state.x, this.state.o, // Player names
+          this.state.turn, // Turn marker
+          JSON.stringify(this.state.board), // Board state
+          this.state.result, // End game
+        ]);
+        if (!gameDepVars) {
+          return;
+        }
+        this.gameDepVars = gameDepVars;
+      }
 
       const cy = can.height / 2;
 
@@ -103,22 +160,54 @@
       this.drawBoard(ctx, gridRect, this.style);
 
       if (this.state.result) {
-        const winFontSize
-          = this.maths.winFontSize
-          = minSize * this.style.winFontSize;
-        const winTop = cy - winFontSize / 2;
-        const winnerRect = {
-          left: 0,
-          top: winTop,
-          right: can.width,
-          bottom: winTop + winFontSize
-        };
-        this.drawWinner(ctx, winnerRect, this.maths, this.style);
+
+        let drawEnd = this.isCleared;
+        if (!drawEnd) {
+          const endDepVars = app.compare.isChanged(this.endDepVars, [
+            this.state.result, // End game
+          ]);
+          if (endDepVars) {
+            this.endDepVars = endDepVars;
+            drawEnd = true;
+          }
+        }
+
+        if (drawEnd) {
+          const winFontSize
+            = this.maths.winFontSize
+            = minSize * this.style.winFontSize;
+          const winTop = cy - winFontSize / 2;
+          const winnerRect = {
+            left: 0,
+            top: winTop,
+            right: can.width,
+            bottom: winTop + winFontSize
+          };
+          this.drawWinner(ctx, winnerRect, this.maths, this.style);
+        }
+
       }
     }
 
     drawScoreboard(ctx, rect, maths, style) {
-      const cx = (rect.right - rect.left) / 2;
+
+      if (!this.isCleared) {
+        const scoreDepVars = app.compare.isChanged(this.scoreDepVars, [
+          this.state.x, this.state.o, // Player names
+          this.state.turn, // Turn marker
+        ]);
+        if (!scoreDepVars) {
+          return;
+        }
+        this.scoreDepVars = scoreDepVars;
+      }
+
+      const width = rect.right - rect.left;
+      const height = rect.bottom - rect.top;
+
+      ctx.clearRect(rect.left, rect.top, width, height);
+
+      const cx = width / 2;
       const fontSize = maths.scoreFontSize;
       ctx.font = fontSize + 'px ' + style.scoreFont;
       ctx.fillStyle = 'black';
@@ -157,22 +246,35 @@
     }
 
     drawBoard(ctx, rect, style) {
-      const size = {
-        width:  rect.right  - rect.left,
-        height: rect.bottom - rect.top
-      };
+
+      const board = this.state.board || [];
+
+      if (!this.isCleared) {
+        const boardDepVars = app.compare.isChanged(this.boardDepVars, [
+          JSON.stringify(board), // Board state
+        ]);
+        if (!boardDepVars) {
+          return;
+        }
+        this.boardDepVars = boardDepVars;
+      }
+
+      const width = rect.right - rect.left;
+      const height = rect.bottom - rect.top;
+
+      ctx.clearRect(rect.left, rect.top, width, height);
+
       const gridWidth = style.gridWidth;
       const gridHeight = style.gridHeight;
       const lane = {
-        width: size.width / gridWidth,
-        height: size.height / gridHeight
+        width: width / gridWidth,
+        height: height / gridHeight
       };
-      const minSize = Math.min(size.width, size.height);
+      const minSize = Math.min(width, height);
       this.drawGrid(ctx, rect, lane, minSize, style);
 
       const xMarkers = [];
       const oMarkers = [];
-      const board = this.state.board || [];
       board.forEach((row, y) => {
         row.forEach((marker, x) => {
           marker = (marker || '').toLowerCase();
