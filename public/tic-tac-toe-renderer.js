@@ -1,14 +1,42 @@
 (function () { 'use strict';
 
+// TODO fix mouse capture positioning within canvas
+// TODO break up into sane commits
+
   class TicTacToeRenderer {
 
-    constructor(
+    constructor({
       canvas,
-      style,
-      state
-    ) {
+      headerEl,
+      player1,
+      player2,
+      turn,
+      style = null,
+      state = null
+    }) {
       this.emitter = new app.cb.Emitter();
       this.canvas = canvas;
+
+      // Watch `top`
+      this.headerResizeObserver = new ResizeObserver(([
+        { borderBoxSize: [ { blockSize } ] }
+      ]) => {
+        this.top = blockSize;
+      });
+      this.headerResizeObserver.observe(headerEl);
+
+      // Watch `width`/`height`
+      this.canvasResizeObserver = new ResizeObserver(([ {
+        borderBoxSize: [ { inlineSize, blockSize } ],
+      } ]) => {
+        this.width = inlineSize;
+        this.height = blockSize;
+      });
+      this.canvasResizeObserver.observe(canvas.parentElement);
+
+      this.player1 = player1;
+      this.player2 = player2;
+      this.turn = turn;
       this.canvasContext = canvas.getContext('2d');
       this.style = {
         gridWidth: 3,
@@ -28,10 +56,7 @@
       };
       // A place to store maths results
       this.maths = {};
-      this.state = {
-        isInLobby: true,
-        ...state,
-      };
+      this.setState({ ...state });
     }
 
     on(event, fn) {
@@ -41,6 +66,7 @@
 
     setState(state) {
       this.state = {
+        isInLobby: true,
         ...this.state,
         ...state,
       };
@@ -50,25 +76,28 @@
     animate(frame) {
       const can = this.canvas;
       const ctx = this.canvasContext;
-      const { width, height } = can;
-      const { innerWidth, innerHeight } = window;
-      const isWidthChange = width !== innerWidth;
-      const isHeightChange = height !== innerHeight;
+      const { width: oldWidth, height: oldHeight } = can;
+      const { width = 0, height = 0 } = this;
+      const isWidthChange = width !== oldWidth;
+      const isHeightChange = height !== oldHeight;
 
       // Set clear flag if size changed
       if (isWidthChange || isHeightChange) {
         if (isWidthChange) {
-          can.width = innerWidth;
+          can.width = width;
         }
         if (isHeightChange) {
-          can.height = innerHeight;
+          can.height = height;
         }
         this.isCleared = true;
       }
 
       // Set clear flag on mouse click
-      if (this.state.click) {
-        this.isCleared = true;
+      const { click, mouse } = this.state;
+      if (mouse || click) {
+        if (click) {
+          this.isCleared = true;
+        }
       }
 
       // Set clear flag if state changed
@@ -83,39 +112,12 @@
       }
 
       ctx.lineCap = 'round';
-      if (this.state.isInLobby) {
-        this.renderLobby();
-      } else {
+      if (!this.state.isInLobby) {
         this.renderBoard();
       }
 
       this.isCleared = false;
       this.state.click = null;
-    }
-
-    renderLobby() {
-      const can = this.canvas;
-      const ctx = this.canvasContext;
-      const { width, height } = can;
-
-      if (!this.isCleared) {
-        const lobbyDepVars = app.compare.isChanged(this.lobbyDepVars, [
-          // e.g. player count
-        ]);
-        if (!lobbyDepVars) {
-          return;
-        }
-        this.lobbyDepVars = lobbyDepVars;
-      }
-
-      ctx.clearRect(0, 0, width, height);
-
-      const minSize = Math.min(width, height);
-
-      const fontSize = minSize * this.style.scoreFontSize;
-      ctx.font = fontSize + 'px ' + this.style.scoreFont;
-      ctx.fillStyle = 'black';
-      ctx.fillText('Lobby', fontSize / 5, fontSize);
     }
 
     renderBoard() {
@@ -143,17 +145,11 @@
       const scoreFontSize
         = this.maths.scoreFontSize
         = minSize * this.style.scoreFontSize;
-      const scoreboardRect = {
-        left: 0,
-        top: 0,
-        right: can.width,
-        bottom: scoreFontSize * 1.2
-      };
-      this.drawScoreboard(ctx, scoreboardRect, this.maths, this.style);
+      this.drawScoreboard(ctx, this.maths, this.style);
 
       const gridRect = {
         left: 0,
-        top: scoreboardRect.bottom,
+        top: 0,
         right: can.width,
         bottom: can.height
       };
@@ -189,8 +185,7 @@
       }
     }
 
-    drawScoreboard(ctx, rect, maths, style) {
-
+    drawScoreboard(ctx, maths, style) {
       if (!this.isCleared) {
         const scoreDepVars = app.compare.isChanged(this.scoreDepVars, [
           this.state.x, this.state.o, // Player names
@@ -202,16 +197,6 @@
         this.scoreDepVars = scoreDepVars;
       }
 
-      const width = rect.right - rect.left;
-      const height = rect.bottom - rect.top;
-
-      ctx.clearRect(rect.left, rect.top, width, height);
-
-      const cx = width / 2;
-      const fontSize = maths.scoreFontSize;
-      ctx.font = fontSize + 'px ' + style.scoreFont;
-      ctx.fillStyle = 'black';
-      const baseLine = rect.top + fontSize;
       const dlmtWho = '';
       // const me = '(Me)';
       const me = '*';
@@ -237,12 +222,9 @@
       const xText = xPlayer + dlmtWho + xWho + dlmtExplicit + xExplicit + padding;
       const oText = padding + oExplicit + dlmtExplicit + oPlayer + dlmtWho + oWho;
 
-      ctx.textAlign = 'center';
-      ctx.fillText(turnMarker, cx, baseLine);
-      ctx.textAlign = 'right';
-      ctx.fillText(xText, cx, baseLine);
-      ctx.textAlign = 'left';
-      ctx.fillText(oText, cx, baseLine);
+      this.turn.innerText = turnMarker;
+      this.player1.innerText = xText;
+      this.player2.innerText = oText;
     }
 
     drawBoard(ctx, rect, style) {
@@ -275,6 +257,18 @@
 
       const xMarkers = [];
       const oMarkers = [];
+
+      const top = Math.floor(this.top);
+      function offset(pos) {
+        if (!pos) {
+          return pos;
+        }
+        const { x = 0, y = 0 } = pos || {};
+        return { x, y: y - top };
+      }
+      const click = offset(this.state.click);
+      const mouse = offset(this.state.mouse);
+
       board.forEach((row, y) => {
         row.forEach((marker, x) => {
           marker = (marker || '').toLowerCase();
@@ -289,15 +283,19 @@
             top: y1,
             bottom: y2
           };
+          if (app.math.is2DContained(markerRect, mouse)){
+            // TODO draw hilite
+            this.drawHighlight(ctx, markerRect, this.state.myMarker === this.state.turn);
+          }
           if (marker === 'x') {
             xMarkers.push(markerRect)
           } else if (marker === 'o') {
             oMarkers.push(markerRect)
-          } else if (this.state.isMyTurn && this.state.click
-            && app.math.is2DContained(markerRect, this.state.click)
-          ) {
-            // TODO: Abstract this to report item clicked
-            this.emitter.emit('take-turn', { x, y });
+          } else if (this.state.isMyTurn && click) {
+            if (app.math.is2DContained(markerRect, click)){
+              // TODO: Abstract this to report item clicked
+              this.emitter.emit('take-turn', { x, y });
+            }
           }
         });
       });
@@ -331,6 +329,12 @@
       }
 
       ctx.stroke();
+    }
+
+    drawHighlight(ctx, { top, right, bottom, left }, enabled) {
+      ctx.fillStyle = enabled ? 'rgba(64,255,0,0.2)' : 'rgba(255,0,0,0.2)';
+      ctx.strokeStyle = null;
+      ctx.fillRect(left, top, right - left, bottom - top)
     }
 
     drawX(ctx, markers, minSize, style) {

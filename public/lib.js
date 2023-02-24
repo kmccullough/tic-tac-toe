@@ -177,7 +177,7 @@
             });
           }
         }
-        draw();
+        requestAnimationFrame(draw);
         return app.canvas;
       }
     },

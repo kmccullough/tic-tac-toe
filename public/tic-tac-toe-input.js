@@ -3,12 +3,33 @@
   class TicTacToeInput {
 
     constructor(
-      element
+      canvas,
+      name,
+      play
     ) {
-      this.element = element = element || document;
+      this.canvas = canvas;
+      this.name = name;
+      this.play = play;
       this.emitter = new app.cb.Emitter();
 
-      element.addEventListener('click', event => {
+      name.addEventListener('change', () => this.emitter.emit('name', name.value));
+      play.addEventListener('click', () => this.emitter.emit('play'));
+
+      canvas.addEventListener('mousemove', event => {
+        this.emitter.emit('mousemove', {
+          event: event,
+          x: event.clientX,
+          y: event.clientY,
+        });
+      });
+      canvas.addEventListener('mouseout', event => {
+        this.emitter.emit('mouseout', {
+          event: event,
+          x: event.clientX,
+          y: event.clientY,
+        });
+      });
+      canvas.addEventListener('click', event => {
         this.emitter.emit('click', {
           event: event,
           x: event.clientX,

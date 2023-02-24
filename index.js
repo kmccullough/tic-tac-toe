@@ -26,21 +26,42 @@ const ipc = require('node-ipc');
 
 ipc.config.id = 'tic-tac-toe.U0F0IWJhfExBckgS';
 ipc.config.stopRetrying = 0;
+ipc.config.silent = true;
 
+const maintenanceNoticeDelay = 5000;
+
+let updateDelayed = 0;
 ipc.serve(() => {
   ipc.server.on('update', (data, socket) => {
-    // For now, just end after a short timeout
-    setTimeout(() => {
-      io.emit('maintenance', 5000);
+    if (updateDelayed === 0) {
+      console.log('Server update requested. Sending maintenance notices.');
+      console.log(`Update will commence in ${maintenanceNoticeDelay * 2} ms...`);
+      // Notify tic-tac-toe clients that the server will soon be going down for maintenance
+      io.emit('maintenance', maintenanceNoticeDelay * 2);
+      // Respond to update server that we need some time...
+      ipc.server.emit(socket, 'update', maintenanceNoticeDelay);
+    } else if (updateDelayed === 1) {
+      console.log(`Update will commence in ${maintenanceNoticeDelay} ms...`);
+      // Notify tic-tac-toe clients that the server will SOON be going down for maintenance
+      io.emit('maintenance', maintenanceNoticeDelay);
+      // Respond to update server that we need MORE time...
+      ipc.server.emit(socket, 'update', maintenanceNoticeDelay);
+    } else {
+      console.log(`Ready for update.`);
+      // Respond to update server that we are ready for update
       ipc.server.emit(socket, 'update');
-    }, 5000);
+    }
+    updateDelayed = (updateDelayed + 1) % 3;
+  });
+  ipc.server.on('disconnect', () => {
+    updateDelayed = 0;
   });
 });
 ipc.server.start();
 
 const port = 3000;
 
-server.listen(port, () => console.log(`Listening on port ${port}.`));
+server.listen(port, () => console.log(`Serving on http://localhost:${port}/`));
 
 app.use(express.static(path.join(__dirname, 'public')));
 

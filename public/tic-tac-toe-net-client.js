@@ -46,6 +46,16 @@
       this.chat = chat || [];
 
       this.socket
+        .on('data', data => {
+          if (Array.isArray(data)) {
+            for (const [ event, ...args ] of data) {
+              this.socket._callbacks?.['$' + event]
+                ?.forEach(cb => cb.apply(socket, args))
+            }
+          }
+        })
+        .on('games', games => this.emitter.emit('games', games))
+        .on('game', game => this.emitter.emit('game', game))
         // Get our own player information
         .on('player', player => {
           this.player = player;
@@ -82,6 +92,10 @@
     on(event, fn) {
       this.emitter.on(event, fn);
       return this;
+    }
+
+    name(name) {
+      this.socket.emit('name', name)
     }
 
     takeTurn(pos) {

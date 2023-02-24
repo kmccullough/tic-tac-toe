@@ -16,12 +16,14 @@ class TicTacToeNetServer {
         this.clients.set(player.id, client);
         this.emitter.emit('connection', player);
         client
-          .on('queue', () => {
-            this.emitter.emit('queue', player)
+          .on('name', name => {
+            if (name) {
+              this.emitter.emit('name', player, name);
+            }
           })
-          .on('take-turn', (pos) => {
-            this.emitter.emit('take-turn', player, pos)
-          })
+          // TODO prevent queue while in game?
+          .on('queue', () => this.emitter.emit('queue', player))
+          .on('take-turn', pos => this.emitter.emit('take-turn', player, pos))
           .on('disconnect', () => {
             this.clients.delete(player.id);
             this.emitter.emit('disconnect', player);
@@ -37,6 +39,17 @@ class TicTacToeNetServer {
 
   error(event, message) {
     this.socket.emit('error', event, message);
+    return this;
+  }
+
+  emit(player, event, ...args) {
+    this.clients.get(player.id)?.emit(event, ...args);
+    return this;
+  }
+
+  broadcast(event, ...args) {
+    this.socket.emit(event, ...args);
+    return this;
   }
 
   emitPlayer(player) {
@@ -52,8 +65,30 @@ class TicTacToeNetServer {
     return this;
   }
 
+  getMatchesData(matches) {
+    const games = [];
+    for (const match of matches) {
+      games.push({
+        id: match.id,
+        players: match.players.players,
+        status: 'active',
+      });
+    }
+    return [ 'games', games ];
+  }
+
+  broadcastMatches(matches) {
+    return this.broadcast(...this.getMatchesData(matches));
+  }
+
   broadcastMatchStart(match) {
+    this.socket.emit('game', {
+      id: match.id,
+      players: match.players.players,
+      status: 'start',
+    });
     const game = {
+      id: match.id,
       turn: 'x',
       board: match.board.board,
     };
@@ -81,6 +116,7 @@ class TicTacToeNetServer {
    */
   broadcastMatchState(match) {
     const game = {
+      id: match.id,
       turn: match.getMarker(),
       board: match.board.board,
     };
@@ -103,7 +139,13 @@ class TicTacToeNetServer {
   }
 
   broadcastMatchEnd(match) {
+    this.socket.emit('game', {
+      id: match.id,
+      players: match.players.players,
+      status: 'end',
+    });
     const game = {
+      id: match.id,
       board: match.board.board,
       result: match.result,
     };

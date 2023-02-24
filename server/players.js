@@ -17,7 +17,6 @@ class Players {
     } else if (Array.isArray(players)) {
       this.players = players.slice();
     }
-    this.length = this.players.length;
     this.emitter = new PlayersEmitter();
   }
 
@@ -34,7 +33,6 @@ class Players {
     player = Player.wrap(player);
     if (!this.has(player)) {
       this.players.push(player);
-      this.length = this.players.length;
       this.emitter.emit('add', player, this);
     }
     return this;
@@ -45,15 +43,40 @@ class Players {
     const i = this.players.findIndex(p => p.id === player.id);
     if (i >= 0) {
       this.players.splice(i, 1);
-      this.length = this.players.length;
       this.emitter.emit('remove', player, this);
     }
     return this;
   }
 
+  toggle(player) {
+    return this.has(player) ? this.remove(player) : this.add(player);
+  }
+
+  get length() {
+    return this.players.length;
+  }
+
+  indexOf(player) {
+    const { id } = Player.wrap(player);
+    return this.players.findIndex(p => p.id === id);
+  }
+
   has(player) {
+    return this.indexOf(player) >= 0;
+  }
+
+  get(player) {
+    return this.players[this.indexOf(player)];
+  }
+
+  update(player) {
     player = Player.wrap(player);
-    return this.players.some(p => p.id === player.id);
+    const index = this.indexOf(player);
+    if (index >= 0) {
+      this.players[index] = player;
+      this.emitter.emit('update', player, this);
+    }
+    return this;
   }
 
   forEach(fn) {
@@ -61,9 +84,10 @@ class Players {
     return this;
   }
 
-  indexOf(player) {
-    return this.players.indexOf(player);
+  map(fn) {
+    return this.players.map(fn);
   }
+
 }
 
 module.exports = {

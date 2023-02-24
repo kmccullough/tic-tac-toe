@@ -1,7 +1,11 @@
 const { Players } = require('./players');
 const { TicTacToeBoard } = require('./tic-tac-toe-board');
 
+let matchId = 0;
+
 class PlayerMatch {
+
+  id = ++matchId;
 
   constructor(
     players,
@@ -10,15 +14,11 @@ class PlayerMatch {
     this.turnMarker = 'x';
     /** @type Players */
     this.players = Players.wrap(players);
-    this.markersByPlayerId = Array.from(this.players).reduce((obj, player, i) => {
-      obj[player.id] = i < 0 ? null : i === 0 ? 'x' : 'o';
-      return obj;
-    }, {});
-    this.board = new TicTacToeBoard(board);
+    this.board = board || new TicTacToeBoard();
   }
 
   getPlayerMarker(player) {
-    return this.markersByPlayerId[player.id];
+    return this.players.indexOf(player) ? 'o' : 'x';
   }
 
   getMarker() {

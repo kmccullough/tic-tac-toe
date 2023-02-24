@@ -20,17 +20,25 @@ class TicTacToe {
     this.queue = queue || new Players();
     this.matches = new PlayerMatches();
 
+    const emitPlayers = () => {
+      const players = [ ...this.players ]
+        .sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+      this.net.broadcastPlayers(players);
+    }
+
     this.players
-      .on('add', player => {
-        // Notify players of latest player list
-        this.net.broadcastPlayers([ ...this.players ]);
+      .on('add', () => {
+        emitPlayers();
       })
       .on('remove', player => {
         this.names.remove(player.name);
         this.queue.remove(player);
         this.matches.getByPlayer(player)
           .forEach(match => this.matches.remove(match));
-        this.net.broadcastPlayers(Array.from(this.players));
+        emitPlayers();
+      })
+      .on('update', () => {
+        emitPlayers();
       })
     ;
 
@@ -68,10 +76,22 @@ class TicTacToe {
         this.net.emitPlayer(player);
         // Add the player to the collection
         this.players.add(player);
+        this.net.emit(player, ...this.net.getMatchesData(this.matches.matches));
+        this.net.emit(player, 'data', [
+          this.net.getMatchesData(this.matches.matches),
+        ]);
+      })
+      .on('name', (player, name) => {
+        console.log(`Player ${player.name} changed name to ${name}`);
+        this.names.remove(player.name);
+        player.name = this.names.add(name, true);
+        this.players.update(player);
+        // Confirm the name change
+        this.net.emitPlayer(player);
       })
       .on('queue', player => {
         // Add player to match queue
-        this.queue.add(player);
+        this.queue.toggle(player);
       })
       .on('take-turn', (player, pos) => {
         /** @type PlayerMatch */
@@ -112,12 +132,10 @@ class TicTacToe {
 
   matchPlayers() {
     const players = [ ...this.queue ];
-    if (players.length >= 2) {
-      const match = new PlayerMatch(players);
-      this.queue
-        .remove(players[0])
-        .remove(players[1])
-      ;
+    while (players.length >= 2) {
+      const p = players.splice(0, 2);
+      const match = new PlayerMatch(p);
+      this.queue.remove(p[0]).remove(p[1]);
       this.matches.add(match);
     }
     return this;

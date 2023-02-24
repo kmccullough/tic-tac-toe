@@ -11,17 +11,157 @@
       margin: 0;
       height: 100%;
       overflow: hidden;
+      font-size: 3vmin;
+    }
+    body {
+      font-family: Helvetica, "Trebuchet MS", Verdana, sans-serif;
+      padding: 0;
+    }
+    button {
+      font-size: 1.2rem;
+      padding: .5rem;
+      margin: 0.05rem;
+    }
+    input {
+      font-size: 1.2rem;
+    }
+    input:where([type='radio']) {
+      margin-top: -0.2rem;
+      vertical-align: middle;
+    }
+    input[type='radio']:not([checked]):not([aria-checked='true']) {
+      cursor: pointer;
+    }
+    input:where([type='range']) {
+      margin-left: 1.8rem;
+    }
+    .app {
+      height: 100%;
+    }
+    .wrapper {
+      height: 100%;
+      display: grid;
+      grid-template-areas:
+        'header'
+        'content'
+        'footer'
+      ;
+      grid-template-rows: fit-content(0) auto fit-content(0);
+    }
+    .header {
+      grid-area: header;
+      background: #332156;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      margin: 0;
+    }
+    .header h1 {
+      padding: 0;
+      margin: 0;
+    }
+    .footer {
+      grid-area: footer;
+      background: #5ac4f1;
+      padding: 0.5rem 1rem;
+    }
+    .content {
+      position: relative;
+    }
+    :where(.lobby) .content {
+      display: grid;
+      grid-template-columns: auto 8rem;
+    }
+    :where(.local-game) .content {
+      overflow: hidden;
+    }
+    .games {
+      overflow: hidden auto;
+    }
+    .game, .connected-player {
+      padding: .5rem;
+      border-bottom: 1px solid #afb9e9;
+    }
+    .game {
+    }
+    .game-player {
+      font-weight: bold;
+      color: #23163d;
+    }
+    .users {
+      border-left: 1px solid #23163d;
+      overflow: hidden auto;
+    }
+    .connected-player {
+      display: block;
+      color: #091b26;
+    }
+    .queue {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, .8);
+    }
+    .modal-message {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
+      width: 100%;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    .is-hidden {
+      display: none;
     }
   </style>
 
 </head>
 <body>
 
-<canvas id="js-canvas"></canvas>
+<div class="app">
+
+  <div class="wrapper lobby">
+    <div class="header">
+      <h1>Tic Tac Toe</h1>
+    </div>
+    <div class="content">
+      <div class="games"></div>
+      <div class="users"></div>
+      <div class="queue is-hidden">
+        <span class="modal-message">Queueing...</span>
+      </div>
+    </div>
+    <div class="footer">
+      <input type="text" class="name"/>
+      <button class="play">Play</button>
+    </div>
+  </div>
+
+  <div class="wrapper local-game">
+    <div class="header">
+      <span class="player player1">
+
+      </span>
+      <span class="turn">
+
+      </span>
+      <span class="player player2">
+
+      </span>
+    </div>
+    <div class="content"><canvas></canvas></div>
+    <div class="footer">
+      <input type="text" class="game-chat"/>
+      <button class="play">Send</button>
+    </div>
+  </div>
+
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/lib.js"></script>
 <script src="/services.js"></script>
+<script src="/tic-tac-toe-router.js"></script>
 <script src="/tic-tac-toe-input.js"></script>
 <script src="/tic-tac-toe-renderer.js"></script>
 <script src="/tic-tac-toe-net-client.js"></script>
